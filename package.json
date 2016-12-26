@@ -1,0 +1,36 @@
+{
+  "name": "aem-build-kit",
+  "version": "0.0.1",
+  "description": "A framework for identifying, describing, and demonstrating AEM project assets including SEO practices, styleguides, and component examples.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sachioross/aem-build-kit.git"
+  },
+  "keywords": [
+    "AEM",
+    "Components",
+    "Adobe",
+    "Experience",
+    "Manager",
+    "CQ",
+    "Discovery"
+  ],
+  "author": "Douglas Ross",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sachioross/aem-build-kit/issues"
+  },
+  "homepage": "https://github.com/sachioross/aem-build-kit#readme",
+  "dependencies": {
+    "commander": "^2.9.0",
+    "express": "^4.14.0"
+  },
+  "devDependencies": {
+    "bootstrap": "^3.3.7",
+    "mocha": "^3.1.2"
+  }
+}
