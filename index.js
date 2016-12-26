@@ -17,6 +17,7 @@ app.get('/', function(req, res) {
    res.send('Working!');
 });
 
+app.use(express.static('static/pages'));
 app.use(express.static('static'));
 
 app.listen(port, function() {
