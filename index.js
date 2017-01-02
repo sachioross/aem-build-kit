@@ -5,7 +5,8 @@ var nunjucks = require('nunjucks');
 var fs = require('fs');
 var marked = require('marked');
 var nsh = require('node-syntaxhighlighter');
-var language =  nsh.getLanguage('html');
+var htmlLanguage=  nsh.getLanguage('html');
+var jsLanguage = nsh.getLanguage('javascript');
 
 /**
  * EXECUTION CONFIGURATION
@@ -38,11 +39,13 @@ marked.setOptions({
     smartLists: true,
     smartypants: false,
     highlight: function (code) {
-        return nsh.highlight(code, language);
+        if (code.indexOf("</") > -1) {
+            return nsh.highlight(code, htmlLanguage);
+        } else {
+            return nsh.highlight(code, jsLanguage);
+        }
     }
 });
-
-// markdown.register(env, marked);
 
 /**
  * ROUTING
@@ -59,7 +62,8 @@ app.get('/component-a', function(req, res) {
     var component = {
         pageTitle: "Component A",
         info: mdToHtml(info),
-        cmp : mdToHtml("``` html\n" + cmp + "```\n")
+        cmp : mdToHtml("``` html\n" + cmp + "```\n"),
+        navigation : createNavigation()
     };
     res.render('component.html', component);
 
@@ -67,8 +71,7 @@ app.get('/component-a', function(req, res) {
 
 
 // TODO: change this to only statically include assets, otherwise handle routing above.
-app.use(express.static('static/pages'));
-app.use(express.static('static'));
+app.use('/assets', express.static('static'));
 
 /**
  * PROGRAM EXECUTION
@@ -87,4 +90,54 @@ function mdToHtml(data) {
     } else {
         return marked(data);
     }
+}
+
+function createNavigation() {
+
+    // TODO: Iterate over each folder / file and example structure
+    // TODO: Level 0: Main Topic (e.g. "Overview", "Style Guide", "SEO", "Components")
+    // TODO: Level 1: Specific Item (e.g. "Title Component", "Fonts", "URL Schema")
+
+    // TODO: SIMPLY ITERATE OVER FILES / FOLDERS AND URL ENCODE
+
+    // TODO: Implement a sorting option
+
+    var nav = traverseFiles('project/sections', 0);
+
+    for (var i in nav) {
+        console.log(nav[i]);
+    }
+
+    return nav;
+}
+
+function traverseFiles(path, depth) {
+
+    var items = new Array();
+
+    var files = fs.readdirSync(path);
+
+    for (var i in files) {
+
+        var currentFile = path + '/' + files[i];
+        var stats = fs.statSync(currentFile);
+
+        var file = {
+            title: files[i],
+            path : currentFile,
+            depth: depth,
+            isDir : false,
+            files : []
+        };
+
+
+        if (stats.isDirectory()) {
+            file.isDir = true;
+            file.files = traverseFiles(currentFile, depth + 1);
+        }
+
+        items.push(file);
+    }
+
+    return items;
 }
