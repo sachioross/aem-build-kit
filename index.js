@@ -25,7 +25,7 @@ if (program.port) {
 /**
  * VIEW CONFIGURATION
  */
-nunjucks.configure('views', {
+var env = nunjucks.configure('views', {
     autoescape: false,
     express: app
 });
@@ -56,9 +56,10 @@ app.get('/', function(req, res) {
 
 app.get('/component-a', function(req, res) {
 
-    var info = fs.readFileSync(__dirname + "/project/sections/components/component-a/info.md");
-    var cmp = fs.readFileSync(__dirname + "/project/sections/components/component-a/component.html");
-
+    // var info = fs.readFileSync(__dirname + "/project/sections/components/component-a/info.md");
+    // var cmp = fs.readFileSync(__dirname + "/project/sections/components/component-a/component.html");
+    var info = 'Figaro;';
+    var cmp = "I don't know";
     var component = {
         pageTitle: "Component A",
         info: mdToHtml(info),
@@ -124,7 +125,7 @@ function traverseFiles(path, depth) {
 
         var file = {
             title: files[i],
-            path : currentFile,
+            path : encodeURI(currentFile),
             depth: depth,
             isDir : false,
             files : []
@@ -141,3 +142,20 @@ function traverseFiles(path, depth) {
 
     return items;
 }
+
+
+/**
+ * CUSTOM NUNJUCK FILTERS
+ */
+
+env.addFilter('dirs', function(list) {
+
+    var filtered = new Array();
+
+    for (item in list) {
+        if (list[item].isDir) {
+            filtered.push(list[item]);
+        }
+    }
+    return filtered;
+});
