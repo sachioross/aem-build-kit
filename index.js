@@ -2,15 +2,18 @@ var express = require('express');
 var app = express();
 var program = require('commander');
 var nunjucks = require('nunjucks');
-var fs = require('fs');
 var marked = require('marked');
 var nsh = require('node-syntaxhighlighter');
-var htmlLanguage=  nsh.getLanguage('html');
-var jsLanguage = nsh.getLanguage('javascript');
+const htmlLanguage=  nsh.getLanguage('html');
+const fs = require('fs');
+const jsLanguage = nsh.getLanguage('javascript');
+const path = require('path');
+const DEFAULT_RANK = 100;
 
-/**
- * EXECUTION CONFIGURATION
- */
+
+/** ------------------------
+   EXECUTION CONFIGURATION
+ ------------------------ */
 program
     .version('0.0.1')
     .option('-p, --port', 'Port')
@@ -22,9 +25,9 @@ if (program.port) {
     port = program.port;
 }
 
-/**
- * VIEW CONFIGURATION
- */
+/** ------------------------
+   VIEW CONFIGURATION
+ ------------------------ */
 var env = nunjucks.configure('views', {
     autoescape: false,
     express: app
@@ -47,9 +50,9 @@ marked.setOptions({
     }
 });
 
-/**
- * ROUTING
- */
+/** ------------------------
+   ROUTING
+ ------------------------ */
 app.get('/', function(req, res) {
    res.render('base.html', { pageTitle: 'AEM Project Playbook'});
 });
@@ -74,16 +77,16 @@ app.get('/component-a', function(req, res) {
 // TODO: change this to only statically include assets, otherwise handle routing above.
 app.use('/assets', express.static('static'));
 
-/**
- * PROGRAM EXECUTION
- */
+/** ------------------------
+   PROGRAM EXECUTION
+ ------------------------ */
 app.listen(port, function() {
     console.log("Server started at " + new Date() + " on port " + port);
 });
 
-/**
- * UTILITY FUNCTIONS
- */
+/** ------------------------
+  UTILITY FUNCTIONS
+ ------------------------ */
 
 function mdToHtml(data) {
     if (typeof data === "object") {
@@ -112,15 +115,15 @@ function createNavigation() {
     return nav;
 }
 
-function traverseFiles(path, depth) {
+function traverseFiles(loc, depth) {
 
     var items = new Array();
 
-    var files = fs.readdirSync(path);
+    var files = fs.readdirSync(loc);
 
     for (var i in files) {
 
-        var currentFile = path + '/' + files[i];
+        var currentFile = loc + '/' + files[i];
         var stats = fs.statSync(currentFile);
 
         var file = {
@@ -128,13 +131,18 @@ function traverseFiles(path, depth) {
             path : encodeURI(currentFile),
             depth: depth,
             isDir : false,
-            files : []
+            files : [],
+            rank : DEFAULT_RANK
         };
 
 
         if (stats.isDirectory()) {
+
+            var children = traverseFiles(currentFile, depth + 1);
+
             file.isDir = true;
-            file.files = traverseFiles(currentFile, depth + 1);
+            file.files = children;
+            file.rank = deduceRank(children);
         }
 
         items.push(file);
@@ -143,11 +151,24 @@ function traverseFiles(path, depth) {
     return items;
 }
 
+function deduceRank(files) {
+
+    for (i in files) {
+        if (/[0-9]+\.rank/.test(files[i].title)) {
+          return Number(files[i].title.split('.')[0]);
+        }
+    }
+    return DEFAULT_RANK;
+}
+
+
+/** ------------------------
+   CUSTOM NUNJUCK FILTERS
+ ------------------------ */
 
 /**
- * CUSTOM NUNJUCK FILTERS
+ * Filter to display only directories
  */
-
 env.addFilter('dirs', function(list) {
 
     var filtered = new Array();
@@ -158,4 +179,14 @@ env.addFilter('dirs', function(list) {
         }
     }
     return filtered;
+});
+
+/**
+ * Filter that orders items by rank
+ */
+
+env.addFilter('ranked', function(list) {
+    return list.sort(function(a, b) {
+        return parseInt(a.rank) - parseInt(b.rank);
+    });
 });
