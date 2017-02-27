@@ -173,7 +173,8 @@ function configureRouting(app, nav) {
                     markup : markup,
                     navigation : navigation,
                     componentPath : componentPath,
-                    lastModified : lastModified.toLocaleString('en-US')
+                    lastModified : lastModified.toLocaleString('en-US'),
+                    status : page.status
                 };
 
                 res.render((markup !== undefined ? "component.html" : "content.html"), content);
