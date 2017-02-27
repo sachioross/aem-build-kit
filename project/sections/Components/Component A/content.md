@@ -11,5 +11,3 @@ function say(words) {
   console.log(words);
   }
 ```
-
-Hi there.
