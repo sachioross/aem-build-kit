@@ -139,7 +139,7 @@ function getMeta(loc, files) {
 
     for (var i in files) {
         if (files.hasOwnProperty(i) && files[i].title === "meta.json") {
-          conf = JSON.parse(fs.readFileSync(loc + "/" + files[i].title, { "encoding" : "utf-8"}));
+          meta = JSON.parse(fs.readFileSync(loc + "/" + files[i].title, { "encoding" : "utf-8"}));
         }
     }
 
