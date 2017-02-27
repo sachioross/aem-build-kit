@@ -19,7 +19,8 @@
 
     <!-- Custom styles for this template -->
     <link href="/assets/css/dashboard.css" rel="stylesheet">
-
+    <link href="/assets/css/iframe.css" rel="stylesheet">
+    <link href="/assets/css/jquery-ui.min.css" rel="stylesheet">
     <!-- Syntax Highlighter Styles -->
     <link href="/assets/highlighter/theme.css" rel="stylesheet">
 
@@ -37,9 +38,9 @@
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
                 <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
+                <span class="icon-bar">A</span>
+                <span class="icon-bar">B</span>
+                <span class="icon-bar">C</span>
             </button>
             <a class="navbar-brand" href="#">Project name</a>
         </div>
@@ -71,6 +72,17 @@
                     no items in navigation
                 {% endfor %}
             </ul>
+            <div class="page-data">
+              <div class="status-info">
+                <p><span class='heading'>Status</span></p>
+                <p><span class='data'>{{ lastModified }}</span></p>
+              </div>
+              <div class="modification-info">
+                <p><span class='heading'>Last Modification</span></p>
+                <p><span class='data'>{{ lastModified }}</span></p>
+              </div>
+            </div>
+
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
             {% block main %}
@@ -83,6 +95,8 @@
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery-ui.min.js"></script>
+<script src="/assets/js/build-kit.js"></script>
 <script>window.jQuery || document.write('<script src="/assets/js/jquery.min.js"><\/script>')</script>
 <script src="/assets/js/bootstrap.min.js"></script>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->

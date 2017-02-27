@@ -3,5 +3,22 @@
 <h1 class="page-header">Component Dashboard</h1>
 {{ info }}
 <br />
-{{ cmp }}
+<ul class="nav nav-tabs" role="tablist">
+  <li role="presentation" class="active">
+    <a href="#markup" aria-controls="markup" role="tab" data-toggle="tab">Markup</a>
+  </li>
+  <li role="presentation">
+    <a href="#demo" aria-controls="demo" role="tab" data-toggle="tab">Demo</a>
+  </li>
+</ul>
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane active" id="markup">
+    {{ mdMarkup }}
+  </div>
+  <div role="tabpanel" class="tab-pane" id="demo">
+    <div class="intrinsic-container intrinsic-container-16x9">
+      <iframe class="demo" src="/demo{{componentPath}}"></iframe>
+    </div>
+  </div>
+</div>
 {% endblock %}
