@@ -9,6 +9,7 @@ const fs = require('fs');
 const jsLanguage = nsh.getLanguage('javascript');
 const path = require('path');
 const DEFAULT_RANK = 100;
+const DEFAULT_STATUS = "IN PROGRESS";
 
 
 /** ------------------------
@@ -53,28 +54,17 @@ marked.setOptions({
 /** ------------------------
    ROUTING
  ------------------------ */
+var navigation = createNavigation();
+
+configureRouting(app, navigation);
+
 app.get('/', function(req, res) {
-   res.render('base.html', { pageTitle: 'AEM Project Playbook'});
+   console.log("sending to overview");
+   res.redirect(301, '/project/sections/Overview');
 });
-
-app.get('/component-a', function(req, res) {
-
-    // var info = fs.readFileSync(__dirname + "/project/sections/components/component-a/info.md");
-    // var cmp = fs.readFileSync(__dirname + "/project/sections/components/component-a/component.html");
-    var info = 'Figaro;';
-    var cmp = "I don't know";
-    var component = {
-        pageTitle: "Component A",
-        info: mdToHtml(info),
-        cmp : mdToHtml("``` html\n" + cmp + "```\n"),
-        navigation : createNavigation()
-    };
-    res.render('component.html', component);
-
-});
-
 
 // TODO: change this to only statically include assets, otherwise handle routing above.
+require('./demo-routing.js')(app);
 app.use('/assets', express.static('static'));
 
 /** ------------------------
@@ -89,6 +79,9 @@ app.listen(port, function() {
  ------------------------ */
 
 function mdToHtml(data) {
+    if (data === undefined || data === null) {
+        return undefined;
+    }
     if (typeof data === "object") {
         return marked(data.toString());
     } else {
@@ -98,26 +91,12 @@ function mdToHtml(data) {
 
 function createNavigation() {
 
-    // TODO: Iterate over each folder / file and example structure
-    // TODO: Level 0: Main Topic (e.g. "Overview", "Style Guide", "SEO", "Components")
-    // TODO: Level 1: Specific Item (e.g. "Title Component", "Fonts", "URL Schema")
-
-    // TODO: SIMPLY ITERATE OVER FILES / FOLDERS AND URL ENCODE
-
-    // TODO: Implement a sorting option
-
-    var nav = traverseFiles('project/sections', 0);
-
-    for (var i in nav) {
-        console.log(nav[i]);
-    }
-
-    return nav;
+    return traverseFiles('project/sections', 0);
 }
 
 function traverseFiles(loc, depth) {
 
-    var items = new Array();
+    var items = [];
 
     var files = fs.readdirSync(loc);
 
@@ -128,21 +107,24 @@ function traverseFiles(loc, depth) {
 
         var file = {
             title: files[i],
-            path : encodeURI(currentFile),
+            path : path.join("/", encodeURI(currentFile)),
+            filePath : currentFile,
             depth: depth,
             isDir : false,
             files : [],
-            rank : DEFAULT_RANK
+            rank : DEFAULT_RANK,
+            status : "IN PROGRESS"
         };
 
 
         if (stats.isDirectory()) {
-
             var children = traverseFiles(currentFile, depth + 1);
+            var meta = getMeta(currentFile, children);
 
             file.isDir = true;
             file.files = children;
-            file.rank = deduceRank(children);
+            file.rank = meta.rank ? meta.rank : DEFAULT_RANK;
+            file.status = meta.status ? meta.status : "IN PROGRESS";
         }
 
         items.push(file);
@@ -151,42 +133,54 @@ function traverseFiles(loc, depth) {
     return items;
 }
 
-function deduceRank(files) {
+function getMeta(loc, files) {
 
-    for (i in files) {
-        if (/[0-9]+\.rank/.test(files[i].title)) {
-          return Number(files[i].title.split('.')[0]);
+    var meta = {};
+
+    for (var i in files) {
+        if (files.hasOwnProperty(i) && files[i].title === "meta.json") {
+          conf = JSON.parse(fs.readFileSync(loc + "/" + files[i].title, { "encoding" : "utf-8"}));
         }
     }
-    return DEFAULT_RANK;
+
+    return meta;
 }
 
+function configureRouting(app, nav) {
 
-/** ------------------------
-   CUSTOM NUNJUCK FILTERS
- ------------------------ */
+    nav.forEach(function(page) {
+        if (page.isDir) {
+            app.get(page.path, function(req, res) {
 
-/**
- * Filter to display only directories
- */
-env.addFilter('dirs', function(list) {
+                var infoPath = path.join(__dirname,"/", page.filePath, "content.md");
+                var info = fs.readFileSync(infoPath, { "encoding" : "utf-8"});
+                var lastModified = new Date(fs.statSync(infoPath).mtime);
+                var componentPath = path.join(__dirname,"/",page.filePath, "component.html");
+                var markup = undefined;
 
-    var filtered = new Array();
+                if (fs.existsSync(componentPath)) {
+                    markup = fs.readFileSync(componentPath, {"encoding" : "utf-8"});
+                    var cmpLastModded = new Date(fs.statSync(componentPath).mtime);
+                    if (lastModified.getTime() < cmpLastModded.getTime()) {
+                      lastModified = cmpLastModded;
+                    }
+                }
 
-    for (item in list) {
-        if (list[item].isDir) {
-            filtered.push(list[item]);
+                var content = {
+                    pageTitle : page.title,
+                    info : mdToHtml(info),
+                    mdMarkup : mdToHtml("``` html\n" + (markup !== undefined ? markup : "") + "```\n"),
+                    markup : markup,
+                    navigation : navigation,
+                    componentPath : componentPath,
+                    lastModified : lastModified.toLocaleString('en-US')
+                };
+
+                res.render((markup !== undefined ? "component.html" : "content.html"), content);
+            });
+            configureRouting(app, page.files);
         }
-    }
-    return filtered;
-});
-
-/**
- * Filter that orders items by rank
- */
-
-env.addFilter('ranked', function(list) {
-    return list.sort(function(a, b) {
-        return parseInt(a.rank) - parseInt(b.rank);
     });
-});
+}
+
+require('./custom-filters.js')(env);
