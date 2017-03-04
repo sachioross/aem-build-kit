@@ -65,7 +65,7 @@ app.get('/', function(req, res) {
 
 // TODO: change this to only statically include assets, otherwise handle routing above.
 require('./demo-routing.js')(app);
-app.use('/assets', express.static('static'));
+app.use('/assets', express.static('buildkit'));
 
 /** ------------------------
    PROGRAM EXECUTION
