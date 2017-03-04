@@ -8,8 +8,6 @@ const htmlLanguage=  nsh.getLanguage('html');
 const fs = require('fs');
 const jsLanguage = nsh.getLanguage('javascript');
 const path = require('path');
-const DEFAULT_RANK = 100;
-const DEFAULT_STATUS = "IN PROGRESS";
 
 
 /** ------------------------
@@ -54,9 +52,9 @@ marked.setOptions({
 /** ------------------------
    ROUTING
  ------------------------ */
-var navigation = createNavigation();
+//var navigation = require('./project-builder.js').traverseFiles('project/sections', 0);
 
-configureRouting(app, navigation);
+require('./client-routing.js')(app, require('./project-builder.js').traverseFiles('project/sections', 0), marked);
 
 app.get('/', function(req, res) {
    console.log("sending to overview");
@@ -64,8 +62,11 @@ app.get('/', function(req, res) {
 });
 
 // TODO: change this to only statically include assets, otherwise handle routing above.
-require('./demo-routing.js')(app);
 app.use('/assets', express.static('buildkit'));
+app.use('/etc/designs/client', express.static('project/assets'));
+
+/* ADD FILTERS */
+require('./custom-filters.js')(env);
 
 /** ------------------------
    PROGRAM EXECUTION
@@ -73,115 +74,3 @@ app.use('/assets', express.static('buildkit'));
 app.listen(port, function() {
     console.log("Server started at " + new Date() + " on port " + port);
 });
-
-/** ------------------------
-  UTILITY FUNCTIONS
- ------------------------ */
-
-function mdToHtml(data) {
-    if (data === undefined || data === null) {
-        return undefined;
-    }
-    if (typeof data === "object") {
-        return marked(data.toString());
-    } else {
-        return marked(data);
-    }
-}
-
-function createNavigation() {
-
-    return traverseFiles('project/sections', 0);
-}
-
-function traverseFiles(loc, depth) {
-
-    var items = [];
-
-    var files = fs.readdirSync(loc);
-
-    for (var i in files) {
-
-        var currentFile = loc + '/' + files[i];
-        var stats = fs.statSync(currentFile);
-
-        var file = {
-            title: files[i],
-            path : path.join("/", encodeURI(currentFile)),
-            filePath : currentFile,
-            depth: depth,
-            isDir : false,
-            files : [],
-            rank : DEFAULT_RANK,
-            status : "IN PROGRESS"
-        };
-
-
-        if (stats.isDirectory()) {
-            var children = traverseFiles(currentFile, depth + 1);
-            var meta = getMeta(currentFile, children);
-
-            file.isDir = true;
-            file.files = children;
-            file.rank = meta.rank ? meta.rank : DEFAULT_RANK;
-            file.status = meta.status ? meta.status : "IN PROGRESS";
-        }
-
-        items.push(file);
-    }
-
-    return items;
-}
-
-function getMeta(loc, files) {
-
-    var meta = {};
-
-    for (var i in files) {
-        if (files.hasOwnProperty(i) && files[i].title === "meta.json") {
-          meta = JSON.parse(fs.readFileSync(loc + "/" + files[i].title, { "encoding" : "utf-8"}));
-        }
-    }
-
-    return meta;
-}
-
-function configureRouting(app, nav) {
-
-    nav.forEach(function(page) {
-        if (page.isDir) {
-            app.get(page.path, function(req, res) {
-
-                var infoPath = path.join(__dirname,"/../", page.filePath, "content.md");
-                var info = fs.readFileSync(infoPath, { "encoding" : "utf-8"});
-                var lastModified = new Date(fs.statSync(infoPath).mtime);
-                var componentPath = path.join(__dirname,"/../",page.filePath, "component.html");
-                var markup = undefined;
-
-                if (fs.existsSync(componentPath)) {
-                    markup = fs.readFileSync(componentPath, {"encoding" : "utf-8"});
-                    var cmpLastModded = new Date(fs.statSync(componentPath).mtime);
-                    if (lastModified.getTime() < cmpLastModded.getTime()) {
-                      lastModified = cmpLastModded;
-                    }
-                }
-
-                var content = {
-                    pageTitle : page.title,
-                    info : mdToHtml(info),
-                    mdMarkup : mdToHtml("``` html\n" + (markup !== undefined ? markup : "") + "```\n"),
-                    markup : markup,
-                    navigation : navigation,
-                    componentPath : componentPath,
-                    lastModified : lastModified.toLocaleString('en-US'),
-                    status : page.status
-                };
-
-                res.render((markup !== undefined ? "component.html" : "content.html"), content);
-            });
-            configureRouting(app, page.files);
-        }
-    });
-}
-
-require('./custom-filters.js')(env);
