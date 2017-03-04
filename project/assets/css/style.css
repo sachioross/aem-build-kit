@@ -1,0 +1,9 @@
+h1,h2,h3,h4,h5 {
+  padding-bottom: 1.5em;
+}
+
+#myNewComponent {
+  width: 60%;
+  background-color: #ddd;
+  border: 1px solid black;
+}
