@@ -4,6 +4,7 @@
   "description": "A framework for identifying, describing, and demonstrating AEM project assets including SEO practices, styleguides, and component examples.",
   "main": "bin/index.js",
   "scripts": {
+    "start" : "node bin/index.js",
     "test": "mocha tests"
   },
   "repository": {
