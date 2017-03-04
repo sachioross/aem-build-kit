@@ -152,10 +152,10 @@ function configureRouting(app, nav) {
         if (page.isDir) {
             app.get(page.path, function(req, res) {
 
-                var infoPath = path.join(__dirname,"/", page.filePath, "content.md");
+                var infoPath = path.join(__dirname,"/../", page.filePath, "content.md");
                 var info = fs.readFileSync(infoPath, { "encoding" : "utf-8"});
                 var lastModified = new Date(fs.statSync(infoPath).mtime);
-                var componentPath = path.join(__dirname,"/",page.filePath, "component.html");
+                var componentPath = path.join(__dirname,"/../",page.filePath, "component.html");
                 var markup = undefined;
 
                 if (fs.existsSync(componentPath)) {

@@ -2,7 +2,7 @@
   "name": "aem-build-kit",
   "version": "0.0.1",
   "description": "A framework for identifying, describing, and demonstrating AEM project assets including SEO practices, styleguides, and component examples.",
-  "main": "index.js",
+  "main": "bin/index.js",
   "scripts": {
     "test": "mocha tests"
   },
