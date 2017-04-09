@@ -52,8 +52,6 @@ marked.setOptions({
 /** ------------------------
    ROUTING
  ------------------------ */
-//var navigation = require('./project-builder.js').traverseFiles('project/sections', 0);
-
 require('./client-routing.js')(app, require('./project-builder.js').traverseFiles('project/sections', 0), marked);
 
 app.get('/', function(req, res) {
